@@ -5,10 +5,10 @@ import { CloseSvg } from '@/internal/svg/closeSvg';
 import { coinbaseWalletSvg } from '@/internal/svg/coinbaseWalletSvg';
 import { defaultAvatarSVG } from '@/internal/svg/defaultAvatarSVG';
 import { metamaskSvg } from '@/internal/svg/metamaskSvg';
-import { phantomSvg } from '@/internal/svg/phantomSvg';
+import { rabbySvg } from '@/internal/svg/rabby';
 import { background, border, cn, color, pressable, text } from '@/styles/theme';
 import { useOnchainKit } from '@/useOnchainKit';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useConnect } from 'wagmi';
 import { coinbaseWallet, injected, metaMask } from 'wagmi/connectors';
 
@@ -77,9 +77,7 @@ export function WalletModal({
 
   const handlePhantomConnection = useCallback(() => {
     try {
-      const phantomConnector = injected({
-        target: 'phantom',
-      });
+      const phantomConnector = injected();
 
       connect({ connector: phantomConnector });
       onClose();
@@ -90,6 +88,15 @@ export function WalletModal({
       );
     }
   }, [connect, onClose, onError]);
+
+  const [isBrowserWalletInstalled, setIsBrowserWalletInstalled] = useState(false);
+
+  useEffect(() => {
+    // This code only runs on the client
+    if (typeof window !== 'undefined' && window.ethereum) {
+      setIsBrowserWalletInstalled(true);
+    }
+  }, []);
 
   return (
     <Dialog isOpen={isOpen} onClose={onClose} aria-label="Connect Wallet">
@@ -180,6 +187,26 @@ export function WalletModal({
             </div>
           </div>
 
+          {isBrowserWalletInstalled &&
+            <button
+              type="button"
+              onClick={handlePhantomConnection}
+              className={cn(
+                border.radius,
+                background.default,
+                text.body,
+                pressable.alternate,
+                color.foreground,
+                'flex items-center justify-between px-4 py-3 text-left',
+              )}
+            >
+              Browser Wallet
+              <div className="-mr-0.5 flex h-4 w-4 items-center justify-center">
+                {rabbySvg}
+              </div>
+            </button>
+          }
+
           <button
             type="button"
             onClick={handleCoinbaseWalletConnection}
@@ -196,44 +223,7 @@ export function WalletModal({
             Coinbase Wallet
             <div className="h-4 w-4">{coinbaseWalletSvg}</div>
           </button>
-
-          <button
-            type="button"
-            onClick={handleMetaMaskConnection}
-            className={cn(
-              border.radius,
-              background.default,
-              text.body,
-              pressable.alternate,
-              color.foreground,
-              'flex items-center justify-between px-4 py-3 text-left',
-            )}
-          >
-            MetaMask
-            <div className="-mr-0.5 flex h-5 w-5 items-center justify-center">
-              {metamaskSvg}
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={handlePhantomConnection}
-            className={cn(
-              border.radius,
-              background.default,
-              text.body,
-              pressable.alternate,
-              color.foreground,
-              'flex items-center justify-between px-4 py-3 text-left',
-            )}
-          >
-            Phantom
-            <div className="-mr-0.5 flex h-4 w-4 items-center justify-center">
-              {phantomSvg}
-            </div>
-          </button>
         </div>
-
         <div
           className={cn(
             color.foregroundMuted,
